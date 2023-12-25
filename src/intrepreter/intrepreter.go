@@ -13,12 +13,17 @@ type Interpreter struct {
 }
 
 func NewInterpreter(input string) *Interpreter {
-	return &Interpreter{
-		code:           input,
-		memory:         make([]byte, 30000),
-		index:          0,
-		programCounter: 0,
-	}
+	var self = &Interpreter{}
+	self.Load(input)
+	return self
+}
+
+func (interpreter *Interpreter) Load(input string) {
+	interpreter.code = input
+	interpreter.memory = make([]byte, 30000)
+	interpreter.programCounter = 0
+	interpreter.index = 0
+	interpreter.addressLoops = []int{}
 }
 
 func (interpreter *Interpreter) Run() {
@@ -55,9 +60,10 @@ func (interpreter *Interpreter) beginLoop() {
 		for loopCount > 0 {
 			interpreter.programCounter++
 
-			if interpreter.code[interpreter.programCounter] == '[' {
+			switch interpreter.code[interpreter.programCounter] {
+			case '[':
 				loopCount++
-			} else if interpreter.code[interpreter.programCounter] == ']' {
+			case ']':
 				loopCount--
 			}
 		}

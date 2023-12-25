@@ -3,13 +3,18 @@ package main
 import (
 	"bf+/info"
 	"bf+/intrepreter"
+	"bufio"
 	"fmt"
 	"os"
+	"strings"
 )
 
+var i = intrepreter.NewInterpreter("")
+var args = os.Args
+
 func ranCode(program string) {
-	var interpreter = intrepreter.NewInterpreter(program)
-	interpreter.Run()
+	i.Load(program)
+	i.Run()
 }
 
 func readAndRanCode(fileName string) {
@@ -23,21 +28,54 @@ func readAndRanCode(fileName string) {
 	ranCode(string(code))
 }
 
-func main() {
-	args := os.Args
+var commands = map[string]func(param string){
+	"str": func(param string) {
+		ranCode(param)
+		os.Exit(0)
+	},
+	"run": func(param string) {
+		readAndRanCode(param)
+		os.Exit(0)
+	},
+}
 
+func ranShell() {
+	reader := bufio.NewReader(os.Stdin)
+	var code string
+
+	fmt.Println(`Use "&" for exit`)
+
+	for {
+		fmt.Print("?> ")
+		code, _ = reader.ReadString('\n')
+
+		if strings.TrimSpace(code) == "&" {
+			break
+		}
+
+		ranCode(code)
+		fmt.Print("\n")
+	}
+
+	os.Exit(0)
+}
+
+func main() {
 	switch len(args) {
 	case 1:
 		info.Info("Info\n")
-	case 3:
-		switch args[1] {
-		case "str":
-			ranCode(args[2])
-		case "run":
-			readAndRanCode(args[2])
-		default:
-			info.Info("Eroor command\n")
+	case 2:
+		if args[1] == "shell" {
+			ranShell()
 		}
+
+		fallthrough
+	case 3:
+		if procedure, ok := commands[args[1]]; ok {
+			procedure(args[2])
+		}
+
+		fallthrough
 	default:
 		info.Info("Eroor command\n")
 	}
